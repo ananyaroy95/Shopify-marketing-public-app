@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Shop {
+  id            String       @id @default(uuid())
+  shopDomain    String       @unique
+  accessToken   String
+  installedAt   DateTime
+  uninstalledAt DateTime?
+  ownerName     String?
+  ownerEmail    String?
+  phone         String?
+  address1      String?
+  city          String?
+  province      String?
+  country       String?
+  zip           String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  permissions Permission?
+}
+
+model Session {
+  id        String   @id
+  shop      String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Permission {
+  id            String   @id @default(uuid())
+  shopId        String   @unique
+  orders        Boolean  @default(false)
+  products      Boolean  @default(false)
+  customers     Boolean  @default(false)
+  marketing     Boolean  @default(false)
+  finance       Boolean  @default(false)
+  analytics     Boolean  @default(false)
+  termsAccepted Boolean  @default(false)
+  updatedAt     DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
