@@ -1,6 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "f51766f3e75ad3ab1f33ad3a788eec65"
+client_id = "1c93c461b9d8ef3338d151b41fd795a9"
 name = "adbuffs-app"
 application_url = "https://adbuffs-app.adbuffs.com"
 embedded = true
