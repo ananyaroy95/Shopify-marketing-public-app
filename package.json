@@ -18,7 +18,7 @@
     "typecheck": "react-router typegen && tsc --noEmit",
     "prisma": "prisma",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init"
+    "prisma:migrate": "prisma migrate deploy"
   },
   "type": "module",
   "engines": {
