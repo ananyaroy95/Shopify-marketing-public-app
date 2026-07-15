@@ -1,11 +1,3 @@
-function getEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing environment variable: ${name}`);
-  }
-  return value;
-}
-
 import "@shopify/shopify-app-react-router/adapters/node";
 import {
   storeSession,
@@ -24,18 +16,11 @@ import {
 import { saveShop } from "./utils/dbShopStorage.server";
 
 const shopify = shopifyApp({
-  // apiKey: process.env.SHOPIFY_API_KEY,
-  // apiSecretKey: process.env.SHOPIFY_API_SECRET || "", 
-  // apiVersion: ApiVersion.October25,
-  // scopes: process.env.SCOPES?.split(","),
-  // appUrl: process.env.SHOPIFY_APP_URL || "",
-  // authPathPrefix: "/auth",
-  apiKey: getEnv("SHOPIFY_API_KEY"),
-  apiSecretKey: getEnv("SHOPIFY_API_SECRET"),
-  appUrl: getEnv("SHOPIFY_APP_URL"),
-  // scopes: getEnv("SCOPES").split(","),
-
+  apiKey: process.env.SHOPIFY_API_KEY,
+  apiSecretKey: process.env.SHOPIFY_API_SECRET || "", 
   apiVersion: ApiVersion.October25,
+  scopes: process.env.SCOPES?.split(","),
+  appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
 
   webhooks: {
