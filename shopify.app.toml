@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "1c93c461b9d8ef3338d151b41fd795a9"
+client_id = "f51766f3e75ad3ab1f33ad3a788eec65"
 name = "adbuffs-app"
-application_url = "https://adbuffs-app.adbuffs.com"
+application_url = "https://omega-crewmate-palm.ngrok-free.dev"
 embedded = true
 
 [build]
@@ -27,6 +27,5 @@ use_legacy_install_flow = false
 
 [auth]
 redirect_urls = [
-  "https://adbuffs-app.adbuffs.com/auth/callback",
-  "https://adbuffs-app.adbuffs.com/api/auth/callback"
+  "https://omega-crewmate-palm.ngrok-free.dev/auth/callback"
 ]

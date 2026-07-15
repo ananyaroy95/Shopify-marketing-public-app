@@ -33,7 +33,7 @@ const shopify = shopifyApp({
   apiKey: getEnv("SHOPIFY_API_KEY"),
   apiSecretKey: getEnv("SHOPIFY_API_SECRET"),
   appUrl: getEnv("SHOPIFY_APP_URL"),
-  scopes: getEnv("SCOPES").split(","),
+  // scopes: getEnv("SCOPES").split(","),
 
   apiVersion: ApiVersion.October25,
   authPathPrefix: "/auth",
