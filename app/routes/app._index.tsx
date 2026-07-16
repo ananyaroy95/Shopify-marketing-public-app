@@ -34,7 +34,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   console.log("SHop data : ", s);
 
-  updateShopOwner(shop, {
+  await updateShopOwner(shop, {
     name: s.shopOwnerName,
     email: s.email,
     phone: s.billingAddress?.phone,
@@ -49,7 +49,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       : undefined,
   });
 
-  const existing = getPermissions(shop);
+  const existing = await getPermissions(shop);
   return existing;
 }
 

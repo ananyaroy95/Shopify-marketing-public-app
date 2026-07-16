@@ -8,7 +8,7 @@ datasource db {
 }
 
 model permission {
-  id            String   @id
+  id            String   @id @default(cuid())
   shopId        String   @unique(map: "Permission_shopId_key")
   orders        Boolean  @default(false)
   products      Boolean  @default(false)
@@ -17,7 +17,7 @@ model permission {
   finance       Boolean  @default(false)
   analytics     Boolean  @default(false)
   termsAccepted Boolean  @default(false)
-  updatedAt     DateTime
+  updatedAt     DateTime @updatedAt
   shop          shop     @relation(fields: [shopId], references: [id], onDelete: Cascade, map: "Permission_shopId_fkey")
 }
 
