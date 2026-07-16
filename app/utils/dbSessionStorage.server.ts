@@ -1,6 +1,16 @@
 import { Session } from "@shopify/shopify-app-react-router/server";
 import prisma from "./prisma.server";
 
+function parseSessionData(data: string): ReturnType<Session["toPropertyArray"]> {
+  let parsed = JSON.parse(data);
+
+  if (typeof parsed === "string") {
+    parsed = JSON.parse(parsed);
+  }
+
+  return parsed;
+}
+
 export async function storeSession(session: Session): Promise<boolean> {
   await prisma.session.upsert({
     where: { id: session.id },
@@ -18,6 +28,16 @@ export async function storeSession(session: Session): Promise<boolean> {
   return true;
 }
 
+// export async function loadSession(id: string): Promise<Session | undefined> {
+//   const record = await prisma.session.findUnique({
+//     where: { id },
+//     select: { data: true },
+//   });
+
+//   if (!record) return undefined;
+//   return Session.fromPropertyArray(JSON.parse(record.data as string));
+// }
+
 export async function loadSession(id: string): Promise<Session | undefined> {
   const record = await prisma.session.findUnique({
     where: { id },
@@ -25,7 +45,8 @@ export async function loadSession(id: string): Promise<Session | undefined> {
   });
 
   if (!record) return undefined;
-  return Session.fromPropertyArray(JSON.parse(record.data as string));
+
+  return Session.fromPropertyArray(parseSessionData(record.data as string));
 }
 
 export async function deleteSession(id: string): Promise<boolean> {
@@ -58,6 +79,6 @@ export async function findSessionsByShop(shop: string): Promise<Session[]> {
   });
 
   return sessions
-    .map((session) => Session.fromPropertyArray(JSON.parse(session.data as string)))
+    .map((session) => Session.fromPropertyArray(parseSessionData(session.data as string)))
     .filter((session): session is Session => Boolean(session));
 }

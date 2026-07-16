@@ -22,15 +22,15 @@ model permission {
 }
 
 model session {
-  id        String   @id
+  id        String   @id @default(cuid())
   shop      String
   data      String   @db.LongText
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
 }
 
 model shop {
-  id            String      @id
+  id            String      @id @default(cuid())
   shopDomain    String      @unique(map: "Shop_shopDomain_key")
   accessToken   String
   installedAt   DateTime
@@ -44,6 +44,6 @@ model shop {
   country       String?
   zip           String?
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime    @updatedAt
   permission    permission?
 }
