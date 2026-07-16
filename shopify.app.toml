@@ -1,6 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "f51766f3e75ad3ab1f33ad3a788eec65"
+client_id = "8abb0f81814b8d6e89744b46575b730b"
 name = "adbuffs-app"
 application_url = "https://omega-crewmate-palm.ngrok-free.dev"
 embedded = true

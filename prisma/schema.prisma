@@ -7,9 +7,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Shop {
-  id            String       @id @default(uuid())
-  shopDomain    String       @unique
+model permission {
+  id            String   @id
+  shopId        String   @unique(map: "Permission_shopId_key")
+  orders        Boolean  @default(false)
+  products      Boolean  @default(false)
+  customers     Boolean  @default(false)
+  marketing     Boolean  @default(false)
+  finance       Boolean  @default(false)
+  analytics     Boolean  @default(false)
+  termsAccepted Boolean  @default(false)
+  updatedAt     DateTime
+  shop          shop     @relation(fields: [shopId], references: [id], onDelete: Cascade, map: "Permission_shopId_fkey")
+}
+
+model session {
+  id        String   @id
+  shop      String
+  data      String   @db.LongText
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model shop {
+  id            String      @id
+  shopDomain    String      @unique(map: "Shop_shopDomain_key")
   accessToken   String
   installedAt   DateTime
   uninstalledAt DateTime?
@@ -21,31 +43,7 @@ model Shop {
   province      String?
   country       String?
   zip           String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-
-  permissions Permission?
-}
-
-model Session {
-  id        String   @id
-  shop      String
-  data      Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Permission {
-  id            String   @id @default(uuid())
-  shopId        String   @unique
-  orders        Boolean  @default(false)
-  products      Boolean  @default(false)
-  customers     Boolean  @default(false)
-  marketing     Boolean  @default(false)
-  finance       Boolean  @default(false)
-  analytics     Boolean  @default(false)
-  termsAccepted Boolean  @default(false)
-  updatedAt     DateTime @updatedAt
-
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime
+  permission    permission?
 }
