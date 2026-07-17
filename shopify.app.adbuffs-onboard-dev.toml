@@ -2,7 +2,7 @@
 
 client_id = "8abb0f81814b8d6e89744b46575b730b"
 name = "Adbuffs Onboard Dev"
-application_url = "https://example.com"
+application_url = "https://adbuffs-app.adbuffs.com"
 embedded = true
 
 [webhooks]
@@ -19,11 +19,14 @@ api_version = "2026-04"
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_orders"
+
 # optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ ]
+redirect_urls = [
+  "https://adbuffs-app.adbuffs.com/auth/callback"
+]
 
 [build]
 automatically_update_urls_on_dev = true

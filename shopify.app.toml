@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "8abb0f81814b8d6e89744b46575b730b"
-name = "adbuffs-app"
+name = "Adbuffs Onboard Dev"
 application_url = "https://omega-crewmate-palm.ngrok-free.dev"
 embedded = true
 
@@ -22,6 +22,7 @@ api_version = "2026-04"
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_orders"
+
 optional_scopes = [ ]
 use_legacy_install_flow = false
 
