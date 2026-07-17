@@ -10,47 +10,73 @@ import GreetingPage from "app/Component/greeting";
 type PermissionKey = | "orders" | "products" | "customers" | "marketing" | "finance" | "analytics";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { session, admin } = await authenticate.admin(request);
-  const shop = session.shop;
-  const response = await admin.graphql(`
-  query {
-    shop {
-      shopOwnerName
-      email
-      billingAddress {
-        phone
-        address1
-        city
-        province
-        country
-        zip
+  try {
+    console.log("STEP-1 Loader started");
+    const { session, admin } = await authenticate.admin(request);
+    console.log("STEP-2 Session", session.shop);
+    const shop = session.shop;
+    const response = await admin.graphql(`
+    query {
+      shop {
+        shopOwnerName
+        email
+        billingAddress {
+          phone
+          address1
+          city
+          province
+          country
+          zip
+        }
       }
     }
-  }
-`);
+  `);
+    console.log("STEP-3 GraphQL response");
 
-  const json = await response.json();
-  const s = json.data.shop;
+    const json = await response.json();
 
-  console.log("SHop data : ", s);
+    console.log("GraphQL JSON:", json);
 
-  await updateShopOwner(shop, {
-    name: s.shopOwnerName,
-    email: s.email,
-    phone: s.billingAddress?.phone,
-    address: s.billingAddress
-      ? {
-          address1: s.billingAddress.address1,
-          city: s.billingAddress.city,
-          province: s.billingAddress.province,
-          country: s.billingAddress.country,
-          zip: s.billingAddress.zip,
-        }
-      : undefined,
-  });
+    // if (json.errors) {
+    //   console.error("GraphQL Errors:", json.errors);
+    //   throw new Error("GraphQL query failed");
+    // }
 
-  const existing = await getPermissions(shop);
-  return existing;
+    console.log("GraphQL Response:", JSON.stringify(json, null, 2));
+
+    const s = json.data.shop;
+
+    console.log("SHop data : ", s);
+
+    console.log("Updating owner");
+
+    await updateShopOwner(shop, {
+      name: s.shopOwnerName,
+      email: s.email,
+      phone: s.billingAddress?.phone,
+      address: s.billingAddress
+        ? {
+            address1: s.billingAddress.address1,
+            city: s.billingAddress.city,
+            province: s.billingAddress.province,
+            country: s.billingAddress.country,
+            zip: s.billingAddress.zip,
+          }
+        : undefined,
+    });
+
+    console.log("Owner updated");
+    console.log("Loading permissions");
+    
+    const existing = await getPermissions(shop);
+
+    console.log("Existing Permission:", existing);
+
+    return existing;
+  } catch (error) {
+  console.error("Loader Error:", error);
+  throw error;
+}
 }
 
 export async function action({ request }: ActionFunctionArgs) {
