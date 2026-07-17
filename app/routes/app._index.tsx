@@ -11,59 +11,59 @@ type PermissionKey = | "orders" | "products" | "customers" | "marketing" | "fina
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
-    console.log("STEP-1 Loader started");
+
+    console.log("========== LOADER START ==========");
+
     const { session, admin } = await authenticate.admin(request);
+
     console.log("Session ID:", session.id);
-    console.log("Is Online:", session.isOnline);
-    console.log("Access Scope:", session.scope);
-    console.log("STEP-2 Session", session.shop);
+    console.log("Shop:", session.shop);
+    console.log("Scope:", session.scope);
+    console.log("Online:", session.isOnline);
+
     const shop = session.shop;
-    console.log("Running GraphQL query...");
+
+    console.log("Running GraphQL...");
+
     const response = await admin.graphql(`
-    query {
-      shop {
-        name
-        shopOwnerName
-        email
-        billingAddress {
-          phone
-          address1
-          city
-          province
-          country
-          zip
+      query {
+        shop {
+          name
+          shopOwnerName
+          email
+          billingAddress {
+            phone
+            address1
+            city
+            province
+            country
+            zip
+          }
         }
       }
-    }
-  `);
-  console.log("GraphQL request completed.");
-  console.log("GraphQL HTTP Status:", response.status);
-  console.log("GraphQL HTTP OK:", response.ok);
+    `);
 
-    console.log("STEP-3 GraphQL response");
-
-    // const json = await response.json();
-
-    
+    console.log("HTTP Status:", response.status);
 
     const json: any = await response.json();
-    console.log("GraphQL JSON:", json);
+
+    console.log("GraphQL Response:");
+    console.log(JSON.stringify(json, null, 2));
+
     if (json.errors) {
-  console.error("GraphQL Errors:", json.errors);
-    throw new Error(JSON.stringify(json.errors, null, 2));
-  }
+      console.error("GraphQL Errors:");
+      console.error(JSON.stringify(json.errors, null, 2));
 
-    console.log("GraphQL Response:", JSON.stringify(json, null, 2));
-
-    // const s = json.data.shop;
-    if (!json.data?.shop) {
-      throw new Error("Shop data not found.");
+      throw new Error("GraphQL query failed.");
     }
+
+    if (!json.data?.shop) {
+      throw new Error("Shop data not returned.");
+    }
+
     const s = json.data.shop;
 
-    console.log("SHop data : ", s);
-
-    console.log("Updating owner");
+    console.log("Updating owner...");
 
     await updateShopOwner(shop, {
       name: s.shopOwnerName,
@@ -80,18 +80,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
         : undefined,
     });
 
-    console.log("Owner updated");
-    console.log("Loading permissions");
-    
+    console.log("Owner Updated");
+
     const existing = await getPermissions(shop);
 
-    console.log("Existing Permission:", existing);
+    console.log("Permissions:");
+    console.log(existing);
+
+    console.log("========== LOADER END ==========");
 
     return existing;
+
   } catch (error) {
+
     console.error("========== LOADER ERROR ==========");
     console.error(error);
     console.error("=================================");
+
     throw error;
   }
 }
