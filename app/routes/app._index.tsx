@@ -13,11 +13,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
   try {
     console.log("STEP-1 Loader started");
     const { session, admin } = await authenticate.admin(request);
+    console.log("Session ID:", session.id);
+    console.log("Is Online:", session.isOnline);
+    console.log("Access Scope:", session.scope);
     console.log("STEP-2 Session", session.shop);
     const shop = session.shop;
+    console.log("Running GraphQL query...");
     const response = await admin.graphql(`
     query {
       shop {
+        name
         shopOwnerName
         email
         billingAddress {
@@ -31,19 +36,29 @@ export async function loader({ request }: LoaderFunctionArgs) {
       }
     }
   `);
+  console.log("GraphQL request completed.");
+  console.log("GraphQL HTTP Status:", response.status);
+  console.log("GraphQL HTTP OK:", response.ok);
+
     console.log("STEP-3 GraphQL response");
 
-    const json = await response.json();
+    // const json = await response.json();
 
+    
+
+    const json: any = await response.json();
     console.log("GraphQL JSON:", json);
-
-    // if (json.errors) {
-    //   console.error("GraphQL Errors:", json.errors);
-    //   throw new Error("GraphQL query failed");
-    // }
+    if (json.errors) {
+  console.error("GraphQL Errors:", json.errors);
+    throw new Error(JSON.stringify(json.errors, null, 2));
+  }
 
     console.log("GraphQL Response:", JSON.stringify(json, null, 2));
 
+    // const s = json.data.shop;
+    if (!json.data?.shop) {
+      throw new Error("Shop data not found.");
+    }
     const s = json.data.shop;
 
     console.log("SHop data : ", s);
@@ -74,9 +89,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     return existing;
   } catch (error) {
-  console.error("Loader Error:", error);
-  throw error;
-}
+    console.error("========== LOADER ERROR ==========");
+    console.error(error);
+    console.error("=================================");
+    throw error;
+  }
 }
 
 export async function action({ request }: ActionFunctionArgs) {
