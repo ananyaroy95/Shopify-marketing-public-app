@@ -114,7 +114,7 @@ export default function EnhancedChecklist() {
         </div>
 
         <div className="intro">
-          <h3>Welcome to The Adbuffs Onboarding App 12345</h3>
+          <h3>Welcome to The Adbuffs Onboarding App</h3>
           <p>By installing Adbuffs Onboard, you consent to the app accessing necessary data from your Shopify store, including, but not limited to, marketing information, customer details, order data, product information, and analytics.</p>
           <p>This data is used only to operate the app and optimize your marketing campaigns. It is not shared with third parties for unrelated purposes.</p>
           <p>Plug the app into your store and keep track of customer approvals, spot useful trends, and make better marketing decisions along the way. Everything runs securely in the background while you focus on growing your store.</p>
