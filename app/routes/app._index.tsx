@@ -10,95 +10,47 @@ import GreetingPage from "app/Component/greeting";
 type PermissionKey = | "orders" | "products" | "customers" | "marketing" | "finance" | "analytics";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  try {
-
-    console.log("========== LOADER START ==========");
-
-    const { session, admin } = await authenticate.admin(request);
-
-    console.log("Session ID:", session.id);
-    console.log("Shop:", session.shop);
-    console.log("Scope:", session.scope);
-    console.log("Online:", session.isOnline);
-
-    const shop = session.shop;
-
-    console.log("Running GraphQL...");
-
-    const response = await admin.graphql(`
-      query {
-        shop {
-          name
-          shopOwnerName
-          email
-          billingAddress {
-            phone
-            address1
-            city
-            province
-            country
-            zip
-          }
-        }
+  const { session, admin } = await authenticate.admin(request);
+  const shop = session.shop;
+  const response = await admin.graphql(`
+  query {
+    shop {
+      shopOwnerName
+      email
+      billingAddress {
+        phone
+        address1
+        city
+        province
+        country
+        zip
       }
-    `);
-
-    console.log("HTTP Status:", response.status);
-
-    const json: any = await response.json();
-
-    console.log("GraphQL Response:");
-    console.log(JSON.stringify(json, null, 2));
-
-    if (json.errors) {
-      console.error("GraphQL Errors:");
-      console.error(JSON.stringify(json.errors, null, 2));
-
-      throw new Error("GraphQL query failed.");
     }
-
-    if (!json.data?.shop) {
-      throw new Error("Shop data not returned.");
-    }
-
-    const s = json.data.shop;
-
-    console.log("Updating owner...");
-
-    await updateShopOwner(shop, {
-      name: s.shopOwnerName,
-      email: s.email,
-      phone: s.billingAddress?.phone,
-      address: s.billingAddress
-        ? {
-            address1: s.billingAddress.address1,
-            city: s.billingAddress.city,
-            province: s.billingAddress.province,
-            country: s.billingAddress.country,
-            zip: s.billingAddress.zip,
-          }
-        : undefined,
-    });
-
-    console.log("Owner Updated");
-
-    const existing = await getPermissions(shop);
-
-    console.log("Permissions:");
-    console.log(existing);
-
-    console.log("========== LOADER END ==========");
-
-    return existing;
-
-  } catch (error) {
-
-    console.error("========== LOADER ERROR ==========");
-    console.error(error);
-    console.error("=================================");
-
-    throw error;
   }
+`);
+
+  const json = await response.json();
+  const s = json.data.shop;
+
+  console.log("SHop data : ", s);
+
+  updateShopOwner(shop, {
+    name: s.shopOwnerName,
+    email: s.email,
+    phone: s.billingAddress?.phone,
+    address: s.billingAddress
+      ? {
+          address1: s.billingAddress.address1,
+          city: s.billingAddress.city,
+          province: s.billingAddress.province,
+          country: s.billingAddress.country,
+          zip: s.billingAddress.zip,
+        }
+      : undefined,
+  });
+
+  const existing = getPermissions(shop);
+  return existing;
 }
 
 export async function action({ request }: ActionFunctionArgs) {
