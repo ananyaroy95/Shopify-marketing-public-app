@@ -16,7 +16,7 @@ echo "Building project..."
 npm run build
 
 echo "Restarting PM2..."
-pm2 startOrReload ecosystem.config.cjs --env production --update-env
+pm2 startOrReload ecosystem.config.cjs --update-env
 
 echo "Saving PM2..."
 pm2 save
