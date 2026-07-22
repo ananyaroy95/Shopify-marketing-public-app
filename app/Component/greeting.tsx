@@ -15,9 +15,9 @@ export default function GreetingPage() {
             <i>If you need help later, you can always manage settings or contact support from inside the app.</i>
           </p>
         </div>
-        <div className="backToAppBtn">
+        {/* <div className="backToAppBtn">
           <button className="primary-btn" onClick={() => navigate("/app?reset=true")}>Continue to App</button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

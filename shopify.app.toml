@@ -1,23 +1,20 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "8abb0f81814b8d6e89744b46575b730b"
-name = "Adbuffs Onboard Dev"
-application_url = "https://omega-crewmate-palm.ngrok-free.dev"
+application_url = "https://adbuffs-app.adbuffs.com"
 embedded = true
-
-[build]
-automatically_update_urls_on_dev = true
+name = "Adbuffs Onboard Dev"
 
 [webhooks]
 api_version = "2026-04"
 
   [[webhooks.subscriptions]]
-  uri = "/webhooks/app/uninstalled"
-  topics = [ "app/uninstalled" ]
-
-  [[webhooks.subscriptions]]
   uri = "/webhooks/app/scopes_update"
   topics = [ "app/scopes_update" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = [ "app/uninstalled" ]
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
@@ -25,6 +22,7 @@ scopes = "read_orders"
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [
-  "https://omega-crewmate-palm.ngrok-free.dev/auth/callback"
-]
+redirect_urls = [ "https://adbuffs-app.adbuffs.com/auth/callback" ]
+
+[build]
+automatically_update_urls_on_dev = true
