@@ -3,9 +3,8 @@ import { Form, useLoaderData, redirect, useSearchParams } from "react-router";
 import "app/style/checklist.css";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { authenticate } from "app/shopify.server";
-import { savePermissions, getPermissions, markGreetingShown } from "app/utils/dbPermissionStorage.server";
+import { savePermissions, getPermissions } from "app/utils/dbPermissionStorage.server";
 import { updateShopOwner } from "app/utils/dbShopStorage.server";
-import GreetingPage from "app/Component/greeting";
 
 type PermissionKey = | "orders" | "products" | "customers" | "marketing" | "finance" | "analytics";
 
@@ -74,14 +73,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const existing = await getPermissions(shop);
   console.log("Permissions:", existing);
 
-  // The greeting page is meant to appear exactly once, right after onboarding
-  // is submitted. Mark it shown now so every subsequent load renders the
-  // persistent info view instead — but return the pre-mark snapshot so THIS
-  // render still shows the greeting.
-  if (existing?.termsAccepted && !existing.greetingShown) {
-    await markGreetingShown(shop);
-  }
-
   return existing;
 }
 
@@ -98,7 +89,7 @@ export async function action({ request }: ActionFunctionArgs) {
     updatedAt: new Date().toISOString(),
   });
 
-  return redirect("/app");
+  return redirect("/app/greeting");
 }
 
 export default function EnhancedChecklist() {
@@ -152,10 +143,6 @@ export default function EnhancedChecklist() {
   // reset=true is an admin/testing escape hatch that always forces the form,
   // regardless of prior submission state.
   if (!reset && permission?.termsAccepted === true) {
-    if (!permission.greetingShown) {
-      return <GreetingPage />;
-    }
-
     return (
       <div className="page-wrapper">
         <div className="info_selected_by_customer">
