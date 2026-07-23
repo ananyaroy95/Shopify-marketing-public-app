@@ -37,3 +37,11 @@ form { display: block; width: 100%; margin: 10px 0; }
 .next-button { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(to left, rgb(56, 132, 219), rgb(183, 0, 255)); color: #ffffff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; font-family: inherit; }
 .next-button:disabled { background: var(--text-tertiary); cursor: not-allowed; opacity: 0.6; }
 .viewLessBtn, .viewMoreBtn { padding: 0 0 0 5px; text-decoration: underline; cursor: pointer; }
+
+/* Setup Completed Styles */
+.setuped-content h1 { font-size: 22px; line-height: normal; font-weight: 600; color: var(--text-primary); margin: 12px 0 15px; }
+.primary-text { font-size: 15px; line-height: 140%; color: #525252; margin: 0 0 10px; }
+.info-text { font-size: 14px; color: #6d7175; background: #ffffff; border: 1px solid #e1e3e5; border-radius: 8px; padding: 20px 25px; margin: 30px 0; }
+
+.primary-btn { background: #008060; color: #ffffff; padding: 12px 22px; border-radius: 6px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; }
+.primary-btn:hover { background: #006e52; }

@@ -159,8 +159,14 @@ export default function EnhancedChecklist() {
     return (
       <div className="page-wrapper">
         <div className="info_selected_by_customer">
-          <p>All information collected by this app is used solely for the purpose of providing services to merchants and is not shared with any third parties. The app is designed to operate in compliance with applicable data protection regulations, ensuring that customer data is handled securely and responsibly.</p>
-          <p>© 2024 Adbuffs Media Private Limited. All rights reserved.</p>
+          <div className="setuped-content">
+            <h1>🎉 Setup Completed!</h1>
+            <p className="primary-text">Thank you for installing Adbuffs Onboard and granting the necessary permissions. The app will now securely access the data required to operate and help you get the best results from your campaigns.</p>
+          <p className="primary-text">You’re ready to take full advantage of everything this app has to offer. Let’s get started!</p>
+            <p className="info-text">
+              <i>If you need help later, you can always manage settings or contact support from inside the app.</i>
+            </p>
+          </div>
         </div>
       </div>
     );
