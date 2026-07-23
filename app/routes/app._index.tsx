@@ -3,7 +3,7 @@ import { Form, useLoaderData, redirect, useSearchParams } from "react-router";
 import "app/style/checklist.css";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { authenticate } from "app/shopify.server";
-import { savePermissions, getPermissions } from "app/utils/dbPermissionStorage.server";
+import { savePermissions, getPermissions, markGreetingShown } from "app/utils/dbPermissionStorage.server";
 import { updateShopOwner } from "app/utils/dbShopStorage.server";
 import GreetingPage from "app/Component/greeting";
 
@@ -74,6 +74,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const existing = await getPermissions(shop);
   console.log("Permissions:", existing);
 
+  // The greeting page is meant to appear exactly once, right after onboarding
+  // is submitted. Mark it shown now so every subsequent load renders the
+  // persistent info view instead — but return the pre-mark snapshot so THIS
+  // render still shows the greeting.
+  if (existing?.termsAccepted && !existing.greetingShown) {
+    await markGreetingShown(shop);
+  }
+
   return existing;
 }
 
@@ -141,89 +149,102 @@ export default function EnhancedChecklist() {
     { key: "analytics", label: "Analytics" },
   ];
 
-  if (permission?.termsAccepted === true && !reset) {
-    return <GreetingPage />;
-  } else {
+  // reset=true is an admin/testing escape hatch that always forces the form,
+  // regardless of prior submission state.
+  if (!reset && permission?.termsAccepted === true) {
+    if (!permission.greetingShown) {
+      return <GreetingPage />;
+    }
+
     return (
       <div className="page-wrapper">
-        <div className="page_form_content">
-          <div className="logo">
-            <img src="/logo.png" alt="Company Logo" />
-          </div>
-
-          <div className="intro">
-            <h3>Welcome to The Adbuffs Onboarding App</h3>
-            <p>By installing Adbuffs Onboard, you consent to the app accessing necessary data from your Shopify store, including, but not limited to, marketing information, customer details, order data, product information, and analytics.</p>
-            <p>This data is used only to operate the app and optimize your marketing campaigns. It is not shared with third parties for unrelated purposes.</p>
-            <p>Plug the app into your store and keep track of customer approvals, spot useful trends, and make better marketing decisions along the way. Everything runs securely in the background while you focus on growing your store.</p>
-            <ul className="text-li">
-              <li> <img src="/check_circle.png" alt="check circle icon" /> Easy Consent Management</li>
-              <li> <img src="/check_circle.png" alt="check circle icon" /> Smarter Campaign Insights</li>
-              <li> <img src="/check_circle.png" alt="check circle icon" /> Secure & Privacy Friendly</li>
-              <li> <img src="/check_circle.png" alt="check circle icon" /> Quick & Simple Setup</li>
-            </ul>
-          </div>
-
-          <Form method="post" replace>
-            <input type="hidden" name="permissions" value={JSON.stringify(checks)} />
-            <input type="hidden" name="termsAccepted" value={String(termsAccepted)} />
-
-            <div className="card">
-              <label className="sellectall">
-                <input type="checkbox" checked={allChecked} onChange={(e) => handleSelectAll(e.target.checked)} />
-                <span className="checkbox-label">Select all</span>
-                <span className="checkbox-checkmark" />
-              </label>
-
-              <div className="divider" />
-
-              {OPTIONS.map((option) => (
-                <label key={option.key} className="checkbox">
-                  <input type="checkbox" checked={checks[option.key]} onChange={handleChange(option.key)} />
-                  <span className="checkbox-label">{option.label}</span>
-                  <span className="checkbox-checkmark" />
-                </label>
-              ))}
-            </div>
-
-            <div className="terms">
-              <label className="terms-check">
-                <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />
-                <span className="checkbox-label">
-                  I agree to the {" "}
-                  <button type="button" className="link-button" onClick={() => window.open("https://adbuffs.com/privacy-policy/", "_blank")}> Terms & Policy </button>
-                </span>
-                <span className="checkbox-checkmark" />
-              </label>
-            </div>
-
-            <div className="actions">
-              <button type="submit" className="next-button" disabled={!canProceed}> Authorized, Continue </button>
-            </div>
-          </Form>
-          
-          <div className="footer-note">
-            <p>Everyone please note that the name of the proposed app shall be "<b>Adbuffs Onboard</b>" for all purposes and assigns.</p>
-            <p>
-              <b>Disclaimer:</b>
-              <i>
-                This application is available exclusively to merchants availing services from "<b>Adbuffs Media Private Limited</b>".
-                {!showMore && (
-                  <i className="viewMoreBtn" role="button" onClick={() => setShowMore(true)}>View More</i>
-                )}
-              </i>
-            </p>
-
-            {showMore && (
-              <p className="more_content">Connect your Shopify store with <b>Adbuffs On-Board</b> to securely manage consent records, support DPDP-compliant marketing activities, and unlock valuable insights that help optimize your campaigns. Designed to work seamlessly in the background, the application lets you focus on growing your business while we help keep your marketing operations compliant and efficient.
-                <i className="viewLessBtn" role="button" onClick={() => setShowMore(false)}>View Less</i>
-              </p>
-            )}
-
-            {/* <strong>Please note:</strong> This app is intended only for merchants using services from Adbuffs Media Private Limited. */}
-          </div>
+        <div className="info_selected_by_customer">
+          <p>All information collected by this app is used solely for the purpose of providing services to merchants and is not shared with any third parties. The app is designed to operate in compliance with applicable data protection regulations, ensuring that customer data is handled securely and responsibly.</p>
+          <p>© 2024 Adbuffs Media Private Limited. All rights reserved.</p>
         </div>
       </div>
     );
   }
+
+  return (
+    <div className="page-wrapper">
+      <div className="page_form_content">
+        <div className="logo">
+          <img src="/logo.png" alt="Company Logo" />
+        </div>
+
+        <div className="intro">
+          <h3>Welcome to The Adbuffs Onboarding App</h3>
+          <p>By installing Adbuffs Onboard, you consent to the app accessing necessary data from your Shopify store, including, but not limited to, marketing information, customer details, order data, product information, and analytics.</p>
+          <p>This data is used only to operate the app and optimize your marketing campaigns. It is not shared with third parties for unrelated purposes.</p>
+          <p>Plug the app into your store and keep track of customer approvals, spot useful trends, and make better marketing decisions along the way. Everything runs securely in the background while you focus on growing your store.</p>
+          <ul className="text-li">
+            <li> <img src="/check_circle.png" alt="check circle icon" /> Easy Consent Management</li>
+            <li> <img src="/check_circle.png" alt="check circle icon" /> Smarter Campaign Insights</li>
+            <li> <img src="/check_circle.png" alt="check circle icon" /> Secure & Privacy Friendly</li>
+            <li> <img src="/check_circle.png" alt="check circle icon" /> Quick & Simple Setup</li>
+          </ul>
+        </div>
+
+        <Form method="post" replace>
+          <input type="hidden" name="permissions" value={JSON.stringify(checks)} />
+          <input type="hidden" name="termsAccepted" value={String(termsAccepted)} />
+
+          <div className="card">
+            <label className="sellectall">
+              <input type="checkbox" checked={allChecked} onChange={(e) => handleSelectAll(e.target.checked)} />
+              <span className="checkbox-label">Select all</span>
+              <span className="checkbox-checkmark" />
+            </label>
+
+            <div className="divider" />
+
+            {OPTIONS.map((option) => (
+              <label key={option.key} className="checkbox">
+                <input type="checkbox" checked={checks[option.key]} onChange={handleChange(option.key)} />
+                <span className="checkbox-label">{option.label}</span>
+                <span className="checkbox-checkmark" />
+              </label>
+            ))}
+          </div>
+
+          <div className="terms">
+            <label className="terms-check">
+              <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />
+              <span className="checkbox-label">
+                I agree to the {" "}
+                <button type="button" className="link-button" onClick={() => window.open("https://adbuffs.com/privacy-policy/", "_blank")}> Terms & Policy </button>
+              </span>
+              <span className="checkbox-checkmark" />
+            </label>
+          </div>
+
+          <div className="actions">
+            <button type="submit" className="next-button" disabled={!canProceed}> Authorized, Continue </button>
+          </div>
+        </Form>
+
+        <div className="footer-note">
+          <p>Everyone please note that the name of the proposed app shall be "<b>Adbuffs Onboard</b>" for all purposes and assigns.</p>
+          <p>
+            <b>Disclaimer:</b>
+            <i>
+              This application is available exclusively to merchants availing services from "<b>Adbuffs Media Private Limited</b>".
+              {!showMore && (
+                <i className="viewMoreBtn" role="button" onClick={() => setShowMore(true)}>View More</i>
+              )}
+            </i>
+          </p>
+
+          {showMore && (
+            <p className="more_content">Connect your Shopify store with <b>Adbuffs On-Board</b> to securely manage consent records, support DPDP-compliant marketing activities, and unlock valuable insights that help optimize your campaigns. Designed to work seamlessly in the background, the application lets you focus on growing your business while we help keep your marketing operations compliant and efficient.
+              <i className="viewLessBtn" role="button" onClick={() => setShowMore(false)}>View Less</i>
+            </p>
+          )}
+
+          {/* <strong>Please note:</strong> This app is intended only for merchants using services from Adbuffs Media Private Limited. */}
+        </div>
+      </div>
+    </div>
+  );
 }

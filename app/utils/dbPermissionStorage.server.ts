@@ -72,8 +72,23 @@ export async function getPermissions(shop: string) {
       analytics: permission.analytics,
     },
     termsAccepted: permission.termsAccepted,
+    greetingShown: permission.greetingShown,
     updatedAt: permission.updatedAt.toISOString(),
   };
+}
+
+export async function markGreetingShown(shop: string) {
+  const shopRecord = await prisma.shop.findUnique({
+    where: { shopDomain: shop },
+    select: { id: true },
+  });
+
+  if (!shopRecord) return;
+
+  await prisma.permission.update({
+    where: { shopId: shopRecord.id },
+    data: { greetingShown: true },
+  });
 }
 
 export async function deletePermissions(shop: string): Promise<boolean> {

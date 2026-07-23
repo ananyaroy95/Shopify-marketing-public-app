@@ -17,6 +17,7 @@ model permission {
   finance       Boolean  @default(false)
   analytics     Boolean  @default(false)
   termsAccepted Boolean  @default(false)
+  greetingShown Boolean  @default(false)
   updatedAt     DateTime @updatedAt
   shop          shop     @relation(fields: [shopId], references: [id], onDelete: Cascade, map: "Permission_shopId_fkey")
 }
