@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { deletePermissions } from "app/utils/dbPermissionStorage.server";
 
 export async function action({ request }: { request: Request }) {
   const rawBody = await request.text();
@@ -34,8 +35,10 @@ export async function action({ request }: { request: Request }) {
     return new Response("No shop domain", { status: 400 });
   }
 
-  // Keep the shop/session/permission data even after uninstall.
-  // Remove cleanup logic if you want to preserve data for later analytics or reinstallation.
+  // Reset onboarding on uninstall so a reinstall goes through the full
+  // checklist → greeting flow again, rather than jumping straight to the
+  // "already set up" view from a prior install.
+  await deletePermissions(shop);
 
   return new Response("OK", { status: 200 });
 }

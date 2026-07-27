@@ -129,8 +129,10 @@ export default function EnhancedChecklist() {
       analytics: checked,
     });
   };
-  // const canProceed = allChecked && termsAccepted;
-  const canProceed = termsAccepted;
+  // Finance is the only voluntary/optional permission — every other checkbox,
+  // plus Terms & Policy, must be checked before the merchant can proceed.
+  const canProceed =
+    checks.orders && checks.products && checks.customers && checks.marketing && checks.analytics && termsAccepted;
   const OPTIONS: { key: PermissionKey; label: string }[] = [
     { key: "orders", label: "Orders" },
     { key: "products", label: "Products" },
