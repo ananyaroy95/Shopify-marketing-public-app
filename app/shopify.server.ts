@@ -18,7 +18,7 @@ import { saveShop } from "./utils/dbShopStorage.server";
 const scopes =
   process.env.SCOPES?.split(",")
     .map((scope) => scope.trim())
-    .filter(Boolean) ?? ["read_orders"];
+    .filter(Boolean) ?? [];
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,

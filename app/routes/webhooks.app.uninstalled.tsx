@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { deletePermissions } from "app/utils/dbPermissionStorage.server";
+import { markShopUninstalled } from "app/utils/dbShopStorage.server";
 
 export async function action({ request }: { request: Request }) {
   const rawBody = await request.text();
@@ -39,6 +40,7 @@ export async function action({ request }: { request: Request }) {
   // checklist → greeting flow again, rather than jumping straight to the
   // "already set up" view from a prior install.
   await deletePermissions(shop);
+  await markShopUninstalled(shop);
 
   return new Response("OK", { status: 200 });
 }

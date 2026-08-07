@@ -98,6 +98,13 @@ export async function updateShopOwner(shop: string, owner: ShopOwner) {
   });
 }
 
+export async function markShopUninstalled(shop: string) {
+  await prisma.shop.updateMany({
+    where: { shopDomain: shop },
+    data: { uninstalledAt: new Date() },
+  });
+}
+
 export async function uninstallShop(shop: string) {
   await prisma.shop.deleteMany({
     where: { shopDomain: shop },

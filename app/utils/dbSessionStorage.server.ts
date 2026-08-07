@@ -29,16 +29,6 @@ export async function storeSession(session: Session): Promise<boolean> {
   return true;
 }
 
-// export async function loadSession(id: string): Promise<Session | undefined> {
-//   const record = await prisma.session.findUnique({
-//     where: { id },
-//     select: { data: true },
-//   });
-
-//   if (!record) return undefined;
-//   return Session.fromPropertyArray(JSON.parse(record.data as string));
-// }
-
 export async function loadSession(id: string): Promise<Session | undefined> {
   const record = await prisma.session.findUnique({
     where: { id },
