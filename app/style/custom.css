@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.custom-page {
+  min-height: calc(100vh - 80px);
+  padding: 32px 20px;
+  background: #f6f6f7;
+  color: #202223;
+  font-family: 'Inter', sans-serif;
+}
+
+.custom-panel {
+  margin: 0 auto;
+  padding: 32px;
+  background: #ffffff;
+  border: 1px solid #e1e3e5;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(32, 34, 35, 0.06);
+}
+
+.custom-eyebrow {
+  display: inline-block;
+  margin: 0 0 2px;
+  background-image: linear-gradient(90deg, #cf26bd 0%, #ba37cd 48%, #9141c9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.custom-title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.custom-intro,
+.custom-note {
+  color: #6d7175;
+  line-height: 1.5;
+}
+
+.custom-intro {
+  margin: 10px 0 24px;
+  font-size: 14px;
+}
+
+.custom-form {
+  display: grid;
+  gap: 20px;
+}
+
+.custom-form label {
+  display: grid;
+  gap: 8px;
+  color: #202223;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.custom-required {
+  color: #d72c0d;
+}
+
+.custom-input,
+.custom-select,
+.custom-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #8c9196;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #202223;
+  font: inherit;
+}
+
+.custom-textarea {
+  resize: vertical;
+}
+
+.custom-input:focus,
+.custom-select:focus,
+.custom-textarea:focus {
+  outline: 2px solid #008060;
+  outline-offset: 1px;
+}
+
+.custom-button {
+  width: 100%;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 4px;
+  background: #9141c9;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.custom-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.custom-error {
+  margin: 0 0 20px;
+  padding: 12px;
+  border: 1px solid #d72c0d;
+  border-radius: 4px;
+  color: #d72c0d;
+}
+
+.custom-select-placeholder {
+  color: #6d7175;
+}
+
+.custom-select option {
+  color: #202223;
+}
+
+.feedback-panel {
+  max-width: 720px;
+}
+
+.feedback-success {
+  text-align: center;
+}
+
+.feedback-success p {
+  margin: 12px 0 24px;
+}
+
+.feedback-success a {
+  color: #008060;
+  font-weight: 600;
+}
+
+.roi-panel {
+  max-width: 880px;
+}
+
+.roi-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.85fr);
+  gap: 24px;
+}
+
+.roi-form,
+.roi-results {
+  display: grid;
+  gap: 16px;
+}
+
+.roi-form label span {
+  color: #6d7175;
+  font-weight: 400;
+}
+
+.roi-results {
+  align-content: start;
+  padding: 20px;
+  border-radius: 8px;
+  background: #f1f8f5;
+}
+
+.roi-results-title {
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+
+.roi-result-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #d2e8df;
+}
+
+.roi-result-card span {
+  color: #6d7175;
+}
+
+.roi-result-card strong {
+  text-align: right;
+}
+
+.roi-positive {
+  color: #008060;
+}
+
+.roi-negative {
+  color: #d72c0d;
+}
+
+.roi-note {
+  margin: 24px 0 0;
+  font-size: 13px;
+}
+
+.roi-error {
+  margin: 0;
+  color: #d72c0d;
+}
+
+.roi-period,
+.roi-empty {
+  margin: 0;
+  color: #6d7175;
+  line-height: 1.5;
+}
+
+/* Onboarding wizard navigation (Back / Next), shared look across steps */
+.wizard-nav {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 16px;
+}
+
+.wizard-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  color: #6d7175;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.wizard-back:hover {
+  background: #f1f1f1;
+  color: #202223;
+}
+
+.wizard-next {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 16px;
+  padding: 12px 20px;
+  border-radius: 4px;
+  background: #9141c9;
+  color: #ffffff;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.wizard-next:hover {
+  opacity: 0.92;
+}
+
+@media (max-width: 700px) {
+  .custom-page {
+    padding: 16px 12px;
+  }
+
+  .custom-panel {
+    padding: 24px 18px;
+  }
+
+  .roi-layout {
+    grid-template-columns: 1fr;
+  }
+}

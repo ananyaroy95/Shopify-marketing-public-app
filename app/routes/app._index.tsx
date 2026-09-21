@@ -1,10 +1,11 @@
 import { useState, useEffect, ChangeEvent } from "react";
-import { Form, useLoaderData, redirect, useSearchParams } from "react-router";
+import { Form, Link, useLoaderData, redirect, useSearchParams } from "react-router";
 import "app/style/checklist.css";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { authenticate } from "app/shopify.server";
 import { savePermissions, getPermissions } from "app/utils/dbPermissionStorage.server";
 import { updateShopOwner } from "app/utils/dbShopStorage.server";
+import { readOnboardingProgress } from "app/utils/onboardingProgressCookie.server";
 
 type PermissionKey = | "orders" | "products" | "customers" | "marketing" | "finance" | "analytics";
 
@@ -13,6 +14,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
   console.log("Shop:", session.shop);
 
   const shop = session.shop;
+
+  const existing = await getPermissions(shop);
+
+  // Merchants who already completed the checklist under a prior version of the
+  // flow (before Feedback/ROI steps existed) shouldn't be forced through them
+  // retroactively — only gate merchants who haven't finished onboarding yet.
+  if (existing?.termsAccepted !== true) {
+    const progress = readOnboardingProgress(request);
+    if (!progress.feedbackSubmitted) {
+      return redirect("/app/feedback");
+    }
+    if (!progress.roiViewed) {
+      return redirect("/app/roi-calculator");
+    }
+  }
 
   // Owner info requires Protected Customer Data access. This is a best-effort
   // side-effect (persisted for later use) — it must never block the checklist
@@ -70,7 +86,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     );
   }
 
-  const existing = await getPermissions(shop);
   console.log("Permissions:", existing);
 
   return existing;
@@ -164,6 +179,10 @@ export default function EnhancedChecklist() {
   return (
     <div className="page-wrapper">
       <div className="page_form_content">
+        <div className="wizard-nav">
+          <Link to="/app/roi-calculator" className="wizard-back">← Back</Link>
+        </div>
+
         <div className="logo">
           <img src="/logo.png" alt="Company Logo" />
         </div>

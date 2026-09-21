@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE `Shop` (
+CREATE TABLE `shop` (
     `id` VARCHAR(191) NOT NULL,
     `shopDomain` VARCHAR(191) NOT NULL,
     `accessToken` VARCHAR(191) NOT NULL,
@@ -21,10 +21,10 @@ CREATE TABLE `Shop` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Session` (
+CREATE TABLE `session` (
     `id` VARCHAR(191) NOT NULL,
     `shop` VARCHAR(191) NOT NULL,
-    `data` JSON NOT NULL,
+    `data` LONGTEXT NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -32,7 +32,7 @@ CREATE TABLE `Session` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Permission` (
+CREATE TABLE `permission` (
     `id` VARCHAR(191) NOT NULL,
     `shopId` VARCHAR(191) NOT NULL,
     `orders` BOOLEAN NOT NULL DEFAULT false,
@@ -42,6 +42,7 @@ CREATE TABLE `Permission` (
     `finance` BOOLEAN NOT NULL DEFAULT false,
     `analytics` BOOLEAN NOT NULL DEFAULT false,
     `termsAccepted` BOOLEAN NOT NULL DEFAULT false,
+    `greetingShown` BOOLEAN NOT NULL DEFAULT false,
     `updatedAt` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `Permission_shopId_key`(`shopId`),
@@ -49,4 +50,4 @@ CREATE TABLE `Permission` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `Permission` ADD CONSTRAINT `Permission_shopId_fkey` FOREIGN KEY (`shopId`) REFERENCES `Shop`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `permission` ADD CONSTRAINT `Permission_shopId_fkey` FOREIGN KEY (`shopId`) REFERENCES `shop`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

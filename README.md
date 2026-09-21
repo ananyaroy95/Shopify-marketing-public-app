@@ -76,6 +76,21 @@ For more information on the Shopify Dev MCP please read [the documentation](http
 
 ## Deployment
 
+### Feedback Email Configuration
+
+The feedback form sends email through Resend. Configure these values once for
+the application deployment; individual Shopify stores do not need email setup:
+
+```env
+RESEND_API_KEY=re_xxxxxxxxx
+APP_OWNER_EMAIL=app-owner@example.com
+EMAIL_FROM_ADDRESS=Adbuffs Onboard <noreply@example.com>
+```
+
+Verify the sender domain with Resend before using the form in production. The
+feedback submission is processed only for email delivery and is not stored in
+Prisma, Shopify metafields, localStorage, or sessionStorage.
+
 ### Application Storage
 
 This template uses [Prisma](https://www.prisma.io/) to store session data, by default using an [SQLite](https://www.sqlite.org/index.html) database.
