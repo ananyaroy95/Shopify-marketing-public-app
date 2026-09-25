@@ -1,20 +1,38 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { Outlet, useLoaderData, useRouteError, isRouteErrorResponse } from "react-router";
+import { Outlet, useLoaderData, useLocation, useRouteError, isRouteErrorResponse } from "react-router";
+import { NavMenu } from "@shopify/app-bridge-react";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
+import { getPermissions } from "../utils/dbPermissionStorage.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  await authenticate.admin(request);
+  const { session } = await authenticate.admin(request);
+  const existing = await getPermissions(session.shop);
 
-  return { apiKey: process.env.SHOPIFY_API_KEY || "" };
+  return {
+    apiKey: process.env.SHOPIFY_API_KEY || "",
+    greetingShown: existing?.greetingShown === true,
+  };
 }
 
 export default function App() {
-  const { apiKey } = useLoaderData<typeof loader>();
+  const { apiKey, greetingShown } = useLoaderData<typeof loader>();
+  const { pathname } = useLocation();
+
+  // Menus unlock once the merchant reaches the congratulation screen. The
+  // greeting loader flips greetingShown in parallel with this loader, so the
+  // pathname check covers that first visit.
+  const showNav = greetingShown || pathname === "/app/greeting";
 
   return (
     <AppProvider embedded apiKey={apiKey}>
+      {showNav && (
+        <NavMenu>
+          <a href="/app/feedback">Feedback</a>
+          <a href="/app/roi-calculator">ROI Calculation</a>
+        </NavMenu>
+      )}
       <Outlet />
     </AppProvider>
   );

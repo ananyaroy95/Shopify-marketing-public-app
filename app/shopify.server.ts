@@ -53,6 +53,12 @@ const shopify = shopifyApp({
     },
   },
 
+  // Required for GraphQL Admin API on public apps. Non-expiring offline
+  // tokens are rejected with HTTP 403 ("GraphQL Client: Forbidden").
+  future: {
+    expiringOfflineAccessTokens: true,
+  },
+
   distribution: AppDistribution.SingleMerchant,
 });
 

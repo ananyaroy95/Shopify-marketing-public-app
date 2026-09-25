@@ -46,5 +46,44 @@ model shop {
   zip           String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-  permission    permission?
+  permission       permission?
+  feedback         feedback[]
+  roiCalculations  roiCalculation[]
+}
+
+model feedback {
+  id                   String   @id @default(cuid())
+  shop                 String
+  companyName          String
+  brandName            String?
+  websiteUrl           String?
+  howDidYouHear        String?
+  associatedWithAdbuffs String?
+  feedback             String   @db.Text
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  shopRecord            shop     @relation(fields: [shop], references: [shopDomain], onDelete: Cascade, map: "Feedback_shop_fkey")
+
+  @@index([shop, createdAt])
+}
+
+model roiCalculation {
+  id             String   @id @default(cuid())
+  shop           String
+  periodDays     Int
+  grossSales     Float
+  orders         Float
+  newCustomers   Float
+  totalSessions  Float
+  spends         Float
+  roi            Float
+  costPerOrder   Float
+  ncac           Float
+  costPerSession Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  shopRecord     shop     @relation(fields: [shop], references: [shopDomain], onDelete: Cascade, map: "RoiCalculation_shop_fkey")
+
+  @@index([shop, createdAt])
+  @@map("RoiCalculation")
 }

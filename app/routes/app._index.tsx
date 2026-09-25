@@ -1,10 +1,24 @@
-import { useState, useEffect, ChangeEvent } from "react";
-import { Form, useLoaderData, redirect, useSearchParams } from "react-router";
-import "app/style/checklist.css";
+import { useState, useEffect, useRef, ChangeEvent } from "react";
+import { useFetcher, useLoaderData, useNavigate, useNavigation, useSearchParams } from "react-router";
+import GreetingPage from "app/Component/greeting";
+import FeedbackFields from "app/Component/FeedbackFields";
+import RoiFields from "app/Component/RoiFields";
+import { formatNumber } from "app/utils/formatNumber";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { authenticate } from "app/shopify.server";
 import { savePermissions, getPermissions } from "app/utils/dbPermissionStorage.server";
 import { updateShopOwner } from "app/utils/dbShopStorage.server";
+import { sendOnboardPermissionEmail } from "app/utils/email.server";
+import { loadDashboard } from "app/utils/dashboard.server";
+import { logAdminAccessDiagnostics } from "app/utils/accessDiagnostics.server";
+
+type RoiResult = {
+  periodDays: number;
+  roi: number;
+  costPerOrder: number;
+  ncac: number;
+  costPerSession: number;
+};
 
 type PermissionKey = | "orders" | "products" | "customers" | "marketing" | "finance" | "analytics";
 
@@ -13,6 +27,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
   console.log("Shop:", session.shop);
 
   const shop = session.shop;
+
+  // Temporary: log real Shopify-granted scopes and probe each Admin call alone.
+  // Remove app/utils/accessDiagnostics.server.ts once the 403 is fixed.
+  await logAdminAccessDiagnostics(admin, {
+    shop,
+    sessionScope: session.scope,
+    hasRefreshToken: Boolean(session.refreshToken),
+    expires: session.expires ?? null,
+  });
 
   // Owner info requires Protected Customer Data access. This is a best-effort
   // side-effect (persisted for later use) — it must never block the checklist
@@ -61,6 +84,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
           }
         : undefined,
     });
+    console.log("[access-diag] shop-owner update: OK");
   } catch (ownerError) {
     console.error("Failed to fetch/update shop owner info (non-fatal):");
     console.error(
@@ -71,9 +95,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   const existing = await getPermissions(shop);
-  console.log("Permissions:", existing);
+  console.log("Permissions (app checklist only, not Shopify scopes):", existing);
+  const dashboard = existing?.termsAccepted === true ? await loadDashboard(admin) : null;
 
-  return existing;
+  return existing ? { ...existing, dashboard } : { dashboard };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -89,12 +114,26 @@ export async function action({ request }: ActionFunctionArgs) {
     updatedAt: new Date().toISOString(),
   });
 
-  return redirect("/app/greeting");
+  // Email #1: notify the App Owner as soon as permissions are granted.
+  await sendOnboardPermissionEmail(shop, permissions, termsAccepted);
+
+  // No redirect here: the page opens the feedback popup once this succeeds.
+  return { saved: true };
 }
 
 export default function EnhancedChecklist() {
   const permission = useLoaderData();
   const [searchParams] = useSearchParams();
+  const fetcher = useFetcher<typeof action>();
+  const feedbackFetcher = useFetcher<{ success: boolean; error?: string }>();
+  const roiFetcher = useFetcher<{ result?: RoiResult; error?: string }>();
+  const navigate = useNavigate();
+  const navigation = useNavigation();
+  const isContinuing = navigation.state !== "idle";
+  // The popup covers both steps: Feedback first, then ROI — matching the
+  // client's flow, with no page navigation until it hands off to Congratulations.
+  const [popupPhase, setPopupPhase] = useState<"feedback" | "roi">("feedback");
+  const advanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reset = searchParams.get("reset") === "true";
   const [checks, setChecks] = useState<Record<PermissionKey, boolean>>({
     orders: false,
@@ -107,10 +146,33 @@ export default function EnhancedChecklist() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [allChecked, setAllChecked] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  // Once the permissions are saved the loader reports termsAccepted, so the popup
+  // must be tracked separately or the "Setup Completed" view would replace it.
+  const showFeedbackPrompt = fetcher.data?.saved === true;
+  const isSaving = fetcher.state !== "idle";
+  const isSendingFeedback = feedbackFetcher.state !== "idle";
+  const isCalculatingRoi = roiFetcher.state !== "idle";
+  const roiResult = roiFetcher.data?.result;
 
   useEffect(() => {
     setAllChecked(Object.values(checks).every(Boolean));
   }, [checks]);
+
+  // If the merchant doesn't click "Next" off the Feedback thank-you screen,
+  // move on to the ROI step automatically after a few seconds.
+  useEffect(() => {
+    if (popupPhase === "feedback" && feedbackFetcher.data?.success) {
+      advanceTimeoutRef.current = setTimeout(() => setPopupPhase("roi"), 3000);
+      return () => {
+        if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+      };
+    }
+  }, [popupPhase, feedbackFetcher.data?.success]);
+
+  function goToRoiStep() {
+    if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    setPopupPhase("roi");
+  }
 
   const handleChange =
     (key: PermissionKey) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -144,21 +206,8 @@ export default function EnhancedChecklist() {
 
   // reset=true is an admin/testing escape hatch that always forces the form,
   // regardless of prior submission state.
-  if (!reset && permission?.termsAccepted === true) {
-    return (
-      <div className="page-wrapper">
-        <div className="info_selected_by_customer">
-          <div className="setuped-content">
-            <h1>🎉 Setup Completed!</h1>
-            <p className="primary-text">Thank you for installing Adbuffs Onboard and granting the necessary permissions. The app will now securely access the data required to operate and help you get the best results from your campaigns.</p>
-          <p className="primary-text">You’re ready to take full advantage of everything this app has to offer. Let’s get started!</p>
-            <p className="info-text">
-              <i>If you need help later, you can always manage settings or contact support from inside the app.</i>
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+  if (!reset && permission?.termsAccepted === true && !showFeedbackPrompt) {
+    return <GreetingPage dashboard={permission.dashboard} />;
   }
 
   return (
@@ -181,7 +230,7 @@ export default function EnhancedChecklist() {
           </ul>
         </div>
 
-        <Form method="post" replace>
+        <fetcher.Form method="post">
           <input type="hidden" name="permissions" value={JSON.stringify(checks)} />
           <input type="hidden" name="termsAccepted" value={String(termsAccepted)} />
 
@@ -215,9 +264,9 @@ export default function EnhancedChecklist() {
           </div>
 
           <div className="actions">
-            <button type="submit" className="next-button" disabled={!canProceed}> Authorized, Continue </button>
+            <button type="submit" className="next-button" disabled={!canProceed || isSaving}> Authorized, Continue </button>
           </div>
-        </Form>
+        </fetcher.Form>
 
         <div className="footer-note">
           <p>Everyone please note that the name of the proposed app shall be "<b>Adbuffs Onboard</b>" for all purposes and assigns.</p>
@@ -240,6 +289,76 @@ export default function EnhancedChecklist() {
           {/* <strong>Please note:</strong> This app is intended only for merchants using services from Adbuffs Media Private Limited. */}
         </div>
       </div>
+
+      {showFeedbackPrompt && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="feedback-prompt-title">
+          <div className="modal-card">
+            {popupPhase === "feedback" ? (
+              feedbackFetcher.data?.success ? (
+                <>
+                  <h2 id="feedback-prompt-title">Thank you for your Feedback</h2>
+                  <p>Your feedback submitted successfully.</p>
+                  <div className="modal-actions">
+                    <button type="button" className="next-button" onClick={goToRoiStep}>Next</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 id="feedback-prompt-title">Share your Feedback</h2>
+                  <p>Tell us about your experience. Your feedback helps us improve the service.</p>
+                  {feedbackFetcher.data?.error && <p className="custom-error" role="alert">{feedbackFetcher.data.error}</p>}
+                  <feedbackFetcher.Form method="post" action="/app/feedback" className="custom-form">
+                    <FeedbackFields />
+                    <div className="custom-actions">
+                      <button className="custom-button" type="submit" disabled={isSendingFeedback}>
+                        {isSendingFeedback ? "Sending..." : "Submit Feedback"}
+                      </button>
+                      <button type="button" className="custom-secondary" onClick={goToRoiStep}>Skip</button>
+                    </div>
+                  </feedbackFetcher.Form>
+                </>
+              )
+            ) : (
+              <>
+                {/* <div className="wizard-nav">
+                  <button type="button" className="wizard-back" onClick={() => setPopupPhase("feedback")}>← Back</button>
+                </div> */}
+                <h2 id="feedback-prompt-title">ROI Calculator</h2>
+                {roiResult ? (
+                  <>
+                    <p>Estimated for the selected {roiResult.periodDays}-day period</p>
+                    <div className="roi-result-card"><span>ROI</span><strong className={roiResult.roi < 1 ? "roi-negative" : "roi-positive"}>{formatNumber(roiResult.roi)}</strong></div>
+                    <div className="roi-result-card"><span>Cost per Order</span><strong>{formatNumber(roiResult.costPerOrder)}</strong></div>
+                    <div className="roi-result-card"><span>New Customer Acquisition Cost</span><strong>{formatNumber(roiResult.ncac)}</strong></div>
+                    <div className="roi-result-card"><span>Cost per Session</span><strong>{formatNumber(roiResult.costPerSession)}</strong></div>
+                    <div className="modal-actions">
+                      <button type="button" className="next-button" disabled={isContinuing} onClick={() => navigate("/app/greeting")}>
+                        {isContinuing ? "Continuing..." : "Next"}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p>Enter your monthly brand metrics to calculate campaign efficiency for a selected reporting period.</p>
+                    {roiFetcher.data?.error && <p className="custom-error" role="alert">{roiFetcher.data.error}</p>}
+                    <roiFetcher.Form method="post" action="/app/roi-calculator" className="custom-form">
+                      <RoiFields />
+                      <div className="custom-actions">
+                        <button className="custom-button" type="submit" disabled={isCalculatingRoi}>
+                          {isCalculatingRoi ? "Calculating…" : "Calculate ROI"}
+                        </button>
+                        <button type="button" className="custom-secondary" disabled={isContinuing} onClick={() => navigate("/app/greeting")}>
+                          {isContinuing ? "Continuing..." : "Skip"}
+                        </button>
+                      </div>
+                    </roiFetcher.Form>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

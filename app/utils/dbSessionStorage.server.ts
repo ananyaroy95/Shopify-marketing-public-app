@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { Session } from "@shopify/shopify-app-react-router/server";
 import prisma from "./prisma.server";
 
@@ -10,6 +9,22 @@ function parseSessionData(data: string): ReturnType<Session["toPropertyArray"]> 
   }
 
   return parsed;
+}
+
+/**
+ * Public apps must use expiring offline tokens. Non-expiring tokens are
+ * rejected by the Admin API with HTTP 403. Those sessions never look
+ * "expired", so the auth layer keeps reusing them unless we discard them.
+ */
+function isUsableSession(session: Session): boolean {
+  if (session.isOnline) return true;
+  if (session.refreshToken) return true;
+
+  console.warn(
+    `[session] Discarding non-expiring offline token for ${session.shop} (id=${session.id}). ` +
+      `Next request will exchange for an expiring token.`,
+  );
+  return false;
 }
 
 export async function storeSession(session: Session): Promise<boolean> {
@@ -37,7 +52,15 @@ export async function loadSession(id: string): Promise<Session | undefined> {
 
   if (!record) return undefined;
 
-  return Session.fromPropertyArray(parseSessionData(record.data as string));
+  const session = Session.fromPropertyArray(parseSessionData(record.data as string));
+  if (!session) return undefined;
+
+  if (!isUsableSession(session)) {
+    await prisma.session.deleteMany({ where: { id } });
+    return undefined;
+  }
+
+  return session;
 }
 
 export async function deleteSession(id: string): Promise<boolean> {
@@ -66,10 +89,22 @@ export async function findSessionIdsByShop(shop: string): Promise<string[]> {
 export async function findSessionsByShop(shop: string): Promise<Session[]> {
   const sessions = await prisma.session.findMany({
     where: { shop },
-    select: { data: true },
+    select: { id: true, data: true },
   });
 
-  return sessions
-    .map((session) => Session.fromPropertyArray(parseSessionData(session.data as string)))
-    .filter((session): session is Session => Boolean(session));
+  const usable: Session[] = [];
+
+  for (const record of sessions) {
+    const session = Session.fromPropertyArray(parseSessionData(record.data as string));
+    if (!session) continue;
+
+    if (!isUsableSession(session)) {
+      await prisma.session.deleteMany({ where: { id: record.id } });
+      continue;
+    }
+
+    usable.push(session);
+  }
+
+  return usable;
 }
