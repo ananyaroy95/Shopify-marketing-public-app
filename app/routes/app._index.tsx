@@ -12,6 +12,10 @@ import { sendOnboardPermissionEmail } from "app/utils/email.server";
 import { loadDashboard } from "app/utils/dashboard.server";
 import { logAdminAccessDiagnostics } from "app/utils/accessDiagnostics.server";
 
+// Onboarding Feedback + ROI popups are kept below but bypassed for now.
+// Set to true to restore the previous popup flow after "Authorized, Continue".
+const ENABLE_ONBOARDING_FEEDBACK_ROI_POPUPS = false;
+
 type RoiResult = {
   periodDays: number;
   roi: number;
@@ -117,7 +121,13 @@ export async function action({ request }: ActionFunctionArgs) {
   // Email #1: notify the App Owner as soon as permissions are granted.
   await sendOnboardPermissionEmail(shop, permissions, termsAccepted);
 
-  // No redirect here: the page opens the feedback popup once this succeeds.
+  // Bypass Feedback + ROI onboarding popups, then show the congratulations screen.
+  // Flip ENABLE_ONBOARDING_FEEDBACK_ROI_POPUPS to true to restore popups.
+  if (!ENABLE_ONBOARDING_FEEDBACK_ROI_POPUPS) {
+    return { saved: true, bypassPopups: true as const };
+  }
+
+  // Legacy path: keep the checklist mounted and open the Feedback popup.
   return { saved: true };
 }
 
@@ -148,7 +158,9 @@ export default function EnhancedChecklist() {
   const [showMore, setShowMore] = useState(false);
   // Once the permissions are saved the loader reports termsAccepted, so the popup
   // must be tracked separately or the "Setup Completed" view would replace it.
-  const showFeedbackPrompt = fetcher.data?.saved === true;
+  // Hidden while ENABLE_ONBOARDING_FEEDBACK_ROI_POPUPS is false.
+  const showFeedbackPrompt =
+    ENABLE_ONBOARDING_FEEDBACK_ROI_POPUPS && fetcher.data?.saved === true;
   const isSaving = fetcher.state !== "idle";
   const isSendingFeedback = feedbackFetcher.state !== "idle";
   const isCalculatingRoi = roiFetcher.state !== "idle";
@@ -203,6 +215,33 @@ export default function EnhancedChecklist() {
     { key: "finance", label: "Finance" },
     { key: "analytics", label: "Analytics" },
   ];
+
+  const showSetupCompleted =
+    !ENABLE_ONBOARDING_FEEDBACK_ROI_POPUPS &&
+    Boolean(fetcher.data && "bypassPopups" in fetcher.data && fetcher.data.bypassPopups);
+
+  // After permissions save (popup bypass): show congratulations, then Continue → dashboard.
+  if (showSetupCompleted) {
+    return (
+      <div className="page-wrapper">
+        <div className="setuped-content" style={{ maxWidth: 720, margin: "40px auto", textAlign: "center" }}>
+          <h1>🎉 Setup Completed!</h1>
+          <p className="primary-text">
+            Thank you for installing Adbuffs Onboard and granting the necessary permissions. The app will now securely access the data required to operate and help you get the best results from your campaigns.
+          </p>
+          <p className="primary-text">You’re ready to take full advantage of everything this app has to offer. Let’s get started!</p>
+          <button
+            type="button"
+            className="primary-btn"
+            disabled={isContinuing}
+            onClick={() => navigate("/app/greeting")}
+          >
+            {isContinuing ? "Continuing..." : "Continue to App"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // reset=true is an admin/testing escape hatch that always forces the form,
   // regardless of prior submission state.

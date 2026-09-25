@@ -3,8 +3,10 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { authenticate } from "app/shopify.server";
 import { getPermissions } from "app/utils/dbPermissionStorage.server";
 import RoiCrudForm from "app/Component/RoiCrudForm";
-import { createRoi, readRoiInput, validateRoi } from "app/utils/roi.server";
+import { calculateRoi, createRoi, readRoiInput, validateRoi } from "app/utils/roi.server";
 import type { RoiErrors, RoiInput } from "app/utils/roi.server";
+import { sendRoiResultEmail } from "app/utils/email.server";
+import { getStoreOwnerEmail } from "app/utils/storeOwnerEmail.server";
 
 async function authorize(request: Request) {
   const auth = await authenticate.admin(request);
@@ -19,12 +21,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const { session } = await authorize(request);
+  const { session, admin } = await authorize(request);
   const input = readRoiInput(await request.formData());
   const errors = validateRoi(input);
   if (Object.keys(errors).length) return data({ errors, values: input }, { status: 400 });
   try {
     await createRoi(session.shop, input);
+    // Create only: notify Store Owner (same as previous onboarding ROI email).
+    const metrics = calculateRoi(input);
+    const storeOwnerEmail = await getStoreOwnerEmail(admin, "ROI calculator");
+    void sendRoiResultEmail(session.shop, storeOwnerEmail, { ...input, ...metrics });
     return redirect("/app/roi-calculator?message=created");
   } catch (error) {
     console.error("Failed to create ROI calculation:", error);
