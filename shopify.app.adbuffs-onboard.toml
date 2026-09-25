@@ -5,17 +5,6 @@ name = "Adbuffs Onboard"
 application_url = "https://adbuffs-app.adbuffs.com"
 embedded = true
 
-[access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
-optional_scopes = [ ]
-use_legacy_install_flow = false
-
-[auth]
-redirect_urls = [
-  "https://adbuffs-app.adbuffs.com/auth/callback"
-]
-
 [webhooks]
 api_version = "2026-07"
 
@@ -39,5 +28,11 @@ api_version = "2026-07"
   uri = "/webhooks/app/scopes_update"
   topics = [ "app/scopes_update" ]
 
-[build]
-automatically_update_urls_on_dev = false
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = ""
+optional_scopes = [ ]
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = [ "https://adbuffs-app.adbuffs.com/auth/callback" ]
