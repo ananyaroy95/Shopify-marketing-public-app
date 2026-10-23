@@ -6,6 +6,8 @@ import FeedbackCrudForm from "app/Component/FeedbackCrudForm";
 import { createFeedback, readFeedbackInput, validateFeedback } from "app/utils/feedback.server";
 import type { FeedbackInput, FeedbackErrors } from "app/utils/feedback.server";
 import { sendFeedbackEmail } from "app/utils/email.server";
+import { sendStoreOwnerFeedbackEmail } from "app/utils/email.server";
+import { getStoreOwnerEmail } from "app/utils/storeOwnerEmail.server";
 
 async function authorize(request: Request) {
   const auth = await authenticate.admin(request);
@@ -20,14 +22,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const { session } = await authorize(request);
+  const { session, admin } = await authorize(request);
   const input = readFeedbackInput(await request.formData());
   const errors = validateFeedback(input);
   if (Object.keys(errors).length) return data({ errors, values: input }, { status: 400 });
   try {
     await createFeedback(session.shop, input);
     // Create only: notify App Owner (same as previous onboarding feedback email).
-    void sendFeedbackEmail(session.shop, {
+    const fields = {
       companyName: input.companyName,
       brandName: input.brandName,
       websiteUrl: input.websiteUrl,
@@ -35,7 +37,10 @@ export async function action({ request }: ActionFunctionArgs) {
       associationStatus: input.associatedWithAdbuffs,
       experienceRating: input.experienceRating,
       feedback: input.feedback,
-    });
+    };
+    await sendFeedbackEmail(session.shop, fields);
+    const storeOwnerEmail = await getStoreOwnerEmail(admin, "Feedback submission");
+    await sendStoreOwnerFeedbackEmail(session.shop, storeOwnerEmail, fields);
     return redirect("/app/feedback?message=created");
   } catch (error) {
     console.error("Failed to create feedback:", error);

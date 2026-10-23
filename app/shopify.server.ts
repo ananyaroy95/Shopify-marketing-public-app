@@ -14,6 +14,7 @@ import {
   DeliveryMethod,
 } from "@shopify/shopify-app-react-router/server";
 import { saveShop } from "./utils/dbShopStorage.server";
+import { sendAppInstalledEmail } from "./utils/email.server";
 
 const scopes =
   process.env.SCOPES?.split(",")
@@ -49,7 +50,8 @@ const shopify = shopifyApp({
       const accessToken = session.accessToken;
 
       if (!shop || !accessToken) return;
-      await saveShop(shop, accessToken);
+      const isNewInstall = await saveShop(shop, accessToken);
+      if (isNewInstall) await sendAppInstalledEmail(shop);
     },
   },
 

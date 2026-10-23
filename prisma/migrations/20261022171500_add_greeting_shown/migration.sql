@@ -1,0 +1,2 @@
+ALTER TABLE `permission`
+ADD COLUMN `greetingShown` BOOLEAN NOT NULL DEFAULT FALSE;
