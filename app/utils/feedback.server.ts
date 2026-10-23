@@ -12,11 +12,17 @@ export type FeedbackInput = {
 
 export type FeedbackErrors = Partial<Record<keyof FeedbackInput, string>>;
 
+export function normalizeWebsiteUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed || /^[a-z][a-z\d+.-]*:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
 export function readFeedbackInput(formData: FormData): FeedbackInput {
   return {
     companyName: String(formData.get("companyName") ?? "").trim(),
     brandName: String(formData.get("brandName") ?? "").trim(),
-    websiteUrl: String(formData.get("websiteUrl") ?? "").trim(),
+    websiteUrl: normalizeWebsiteUrl(String(formData.get("websiteUrl") ?? "")),
     howDidYouHear: String(formData.get("howDidYouHear") ?? "").trim(),
     associatedWithAdbuffs: String(formData.get("associatedWithAdbuffs") ?? "").trim(),
     experienceRating: String(formData.get("experienceRating") ?? "").trim(),

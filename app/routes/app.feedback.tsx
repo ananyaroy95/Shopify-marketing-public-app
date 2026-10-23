@@ -2,8 +2,9 @@ import { Outlet, data, redirect } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { authenticate } from "app/shopify.server";
 import { getPermissions } from "app/utils/dbPermissionStorage.server";
-import { createFeedback, deleteFeedback, readFeedbackInput, validateFeedback } from "app/utils/feedback.server";
-import { sendFeedbackEmail } from "app/utils/email.server";
+import { createFeedback, deleteFeedback, normalizeWebsiteUrl, readFeedbackInput, validateFeedback } from "app/utils/feedback.server";
+import { sendFeedbackEmail, sendStoreOwnerFeedbackEmail } from "app/utils/email.server";
+import { getStoreOwnerEmail } from "app/utils/storeOwnerEmail.server";
 import { withFeedbackAnswersCookie } from "app/utils/onboardingAnswersCookie.server";
 
 async function requireOnboarding(request: Request) {
@@ -19,7 +20,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const { session } = await authenticate.admin(request);
+  const { session, admin } = await authenticate.admin(request);
   const formData = await request.formData();
   const intent = String(formData.get("intent") ?? "popup");
 
@@ -41,6 +42,18 @@ export async function action({ request }: ActionFunctionArgs) {
     if (Object.keys(errors).length) return data({ errors, values: input }, { status: 400 });
     try {
       await createFeedback(session.shop, input);
+      const fields = {
+        companyName: input.companyName,
+        brandName: input.brandName,
+        websiteUrl: input.websiteUrl,
+        discoverySource: input.howDidYouHear,
+        associationStatus: input.associatedWithAdbuffs,
+        experienceRating: input.experienceRating,
+        feedback: input.feedback,
+      };
+      await sendFeedbackEmail(session.shop, fields);
+      const storeOwnerEmail = await getStoreOwnerEmail(admin, "Feedback submission");
+      await sendStoreOwnerFeedbackEmail(session.shop, storeOwnerEmail, fields);
       return redirect("/app/feedback?message=created");
     } catch (error) {
       console.error("Failed to create feedback:", error);
@@ -51,7 +64,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const fields = {
     companyName: String(formData.get("companyName") ?? "").trim(),
     brandName: String(formData.get("brandName") ?? "").trim(),
-    websiteUrl: String(formData.get("websiteUrl") ?? "").trim(),
+    websiteUrl: normalizeWebsiteUrl(String(formData.get("websiteUrl") ?? "")),
     discoverySource: String(formData.get("discoverySource") ?? "").trim(),
     associationStatus: String(formData.get("associationStatus") ?? "").trim(),
     experienceRating: String(formData.get("experienceRating") ?? "").trim(),
@@ -62,6 +75,8 @@ export async function action({ request }: ActionFunctionArgs) {
     try { new URL(fields.websiteUrl); } catch { return data({ success: false, error: "Please enter a valid Website URL." }); }
   }
   await sendFeedbackEmail(session.shop, fields);
+  const storeOwnerEmail = await getStoreOwnerEmail(admin, "Feedback submission");
+  await sendStoreOwnerFeedbackEmail(session.shop, storeOwnerEmail, fields);
   return data({ success: true }, { headers: { "Set-Cookie": withFeedbackAnswersCookie(fields) } });
 }
 

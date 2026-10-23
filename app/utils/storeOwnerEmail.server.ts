@@ -4,6 +4,11 @@
 type MinimalAdmin = { graphql: (query: string, options?: any) => Promise<Response> };
 
 export async function getStoreOwnerEmail(admin: MinimalAdmin, context: string) {
+  const testRecipient = process.env.TEST_STORE_OWNER_EMAIL;
+  if (process.env.NODE_ENV !== "production" && testRecipient) {
+    return testRecipient;
+  }
+
   try {
     const response = await admin.graphql(`query { shop { email } }`);
     const json: any = await response.json();
@@ -18,13 +23,12 @@ export async function getStoreOwnerEmail(admin: MinimalAdmin, context: string) {
     console.error(`${context}: failed to load store owner email (non-fatal):`, error);
   }
 
-  const fallback = process.env.TEST_STORE_OWNER_EMAIL;
-  if (fallback) {
+  if (testRecipient) {
     console.warn(
-      `${context}: using TEST_STORE_OWNER_EMAIL fallback ('${fallback}') because the live protected shop.email lookup ` +
+      `${context}: using TEST_STORE_OWNER_EMAIL fallback ('${testRecipient}') because the live protected shop.email lookup ` +
         `didn't return a value. This is a testing stand-in — see storeOwnerEmail.server.ts.`,
     );
-    return fallback;
+    return testRecipient;
   }
 
   return "";

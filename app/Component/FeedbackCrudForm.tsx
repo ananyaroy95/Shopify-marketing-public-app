@@ -45,7 +45,7 @@ export default function FeedbackCrudForm({ mode, values = emptyValues, errors: s
       </label>
       <label>
         <span>Website URL</span>
-        <input className="custom-input" name="websiteUrl" type="url" defaultValue={values.websiteUrl} placeholder="https://example.com" maxLength={500} aria-invalid={Boolean(fieldErrors.websiteUrl)} onChange={() => clearError("websiteUrl")} />
+        <input className="custom-input" name="websiteUrl" type="text" defaultValue={values.websiteUrl} placeholder="example.com" maxLength={500} aria-invalid={Boolean(fieldErrors.websiteUrl)} onChange={() => clearError("websiteUrl")} />
         {fieldErrors.websiteUrl && <span className="field-error" role="alert">{fieldErrors.websiteUrl}</span>}
       </label>
       <label>

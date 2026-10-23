@@ -20,7 +20,7 @@ export default function FeedbackFields() {
 
       <label>
         Website URL
-        <input className="custom-input" name="websiteUrl" type="url" placeholder="https://example.com" maxLength={500} />
+        <input className="custom-input" name="websiteUrl" type="text" placeholder="example.com" maxLength={500} />
       </label>
 
       <label>

@@ -30,7 +30,7 @@ export async function action({ request }: ActionFunctionArgs) {
     // Create only: notify Store Owner (same as previous onboarding ROI email).
     const metrics = calculateRoi(input);
     const storeOwnerEmail = await getStoreOwnerEmail(admin, "ROI calculator");
-    void sendRoiResultEmail(session.shop, storeOwnerEmail, { ...input, ...metrics });
+    await sendRoiResultEmail(session.shop, storeOwnerEmail, { ...input, ...metrics });
     return redirect("/app/roi-calculator?message=created");
   } catch (error) {
     console.error("Failed to create ROI calculation:", error);

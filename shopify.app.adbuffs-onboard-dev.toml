@@ -5,16 +5,16 @@ name = "Adbuffs Onboard Dev"
 application_url = "https://omega-crewmate-palm.ngrok-free.dev"
 embedded = true
 
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers,read_orders"
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = [ "https://omega-crewmate-palm.ngrok-free.dev/auth/callback" ]
+
 [webhooks]
 api_version = "2026-04"
-
-  [[webhooks.subscriptions]]
-  uri = "/webhooks/app/scopes_update"
-  topics = [ "app/scopes_update" ]
-
-  [[webhooks.subscriptions]]
-  uri = "/webhooks/app/uninstalled"
-  topics = [ "app/uninstalled" ]
 
   [[webhooks.subscriptions]]
   uri = "/webhooks/customers/data_request"
@@ -28,17 +28,13 @@ api_version = "2026-04"
   uri = "/webhooks/shop/redact"
   compliance_topics = [ "shop/redact" ]
 
-[access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_customers,read_orders"
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/scopes_update"
+  topics = [ "app/scopes_update" ]
 
-# optional_scopes = [ ]
-use_legacy_install_flow = false
-
-[auth]
-redirect_urls = [
-  "https://omega-crewmate-palm.ngrok-free.dev/auth/callback"
-]
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = [ "app/uninstalled" ]
 
 [build]
 automatically_update_urls_on_dev = true

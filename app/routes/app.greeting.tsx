@@ -15,9 +15,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const existing = await getPermissions(shop);
 
-  // The checklist has to be finished before this screen. The summary email
-  // still goes out only the first time, so a later Next click can open the
-  // congratulations page without waiting on mail again.
+  // The checklist has to be finished before this screen. The combined summary
+  // email still goes out once when the greeting screen is first opened.
   if (!existing?.termsAccepted) {
     return redirect("/app");
   }
@@ -34,7 +33,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const feedback = readFeedbackAnswers(request);
     const roi = readRoiAnswers(request);
     await markGreetingShown(shop);
-    void sendGreetingSummary(admin, shop, existing.permissions, existing.termsAccepted, feedback, roi);
+    await sendGreetingSummary(admin, shop, existing.permissions, existing.termsAccepted, feedback, roi);
   }
 
   return { dashboard: await loadDashboard(admin) };

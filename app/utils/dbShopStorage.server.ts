@@ -21,6 +21,11 @@ type ShopRecord = {
 };
 
 export async function saveShop(shop: string, accessToken: string) {
+  const existing = await prisma.shop.findUnique({
+    where: { shopDomain: shop },
+    select: { uninstalledAt: true },
+  });
+
   await prisma.shop.upsert({
     where: { shopDomain: shop },
     update: {
@@ -34,6 +39,8 @@ export async function saveShop(shop: string, accessToken: string) {
       installedAt: new Date(),
     },
   });
+
+  return !existing || existing.uninstalledAt !== null;
 }
 
 export async function getInstalledShop(shop: string): Promise<ShopRecord | null> {

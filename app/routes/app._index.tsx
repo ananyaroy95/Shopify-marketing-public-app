@@ -8,7 +8,8 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { authenticate } from "app/shopify.server";
 import { savePermissions, getPermissions } from "app/utils/dbPermissionStorage.server";
 import { updateShopOwner } from "app/utils/dbShopStorage.server";
-import { sendOnboardPermissionEmail } from "app/utils/email.server";
+import { sendOnboardPermissionEmail, sendStoreOwnerSetupCompletedEmail } from "app/utils/email.server";
+import { getStoreOwnerEmail } from "app/utils/storeOwnerEmail.server";
 import { loadDashboard } from "app/utils/dashboard.server";
 import { logAdminAccessDiagnostics } from "app/utils/accessDiagnostics.server";
 
@@ -106,11 +107,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const { session } = await authenticate.admin(request);
+  const { session, admin } = await authenticate.admin(request);
   const shop = session.shop;
   const formData = await request.formData();
   const permissions = JSON.parse(formData.get("permissions") as string);
   const termsAccepted = formData.get("termsAccepted") === "true";
+  const wasSetupComplete = (await getPermissions(shop))?.termsAccepted === true;
 
   await savePermissions(shop, {
     permissions,
@@ -120,6 +122,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
   // Email #1: notify the App Owner as soon as permissions are granted.
   await sendOnboardPermissionEmail(shop, permissions, termsAccepted);
+
+  if (!wasSetupComplete && termsAccepted) {
+    const storeOwnerEmail = await getStoreOwnerEmail(admin, "Setup completed");
+    await sendStoreOwnerSetupCompletedEmail(shop, storeOwnerEmail, permissions, termsAccepted);
+  }
 
   // Bypass Feedback + ROI onboarding popups, then show the congratulations screen.
   // Flip ENABLE_ONBOARDING_FEEDBACK_ROI_POPUPS to true to restore popups.

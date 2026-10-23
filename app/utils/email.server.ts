@@ -107,6 +107,34 @@ function permissionsGranted(permissions: Record<PermissionKey, boolean>) {
   return granted.length ? granted.map((key) => PERMISSION_LABELS[key]).join(", ") : "None";
 }
 
+export async function sendAppInstalledEmail(shop: string) {
+  const html = `
+    <h2>Adbuffs Onboard was installed successfully</h2>
+    ${table([
+      row("Store", shop),
+      row("Installed at", new Date().toISOString()),
+    ].join(""))}
+  `;
+  await sendMail(process.env.APP_OWNER_EMAIL ?? "", `Adbuffs Onboard: ${shop} installed the app successfully`, html);
+}
+
+export async function sendStoreOwnerSetupCompletedEmail(
+  shop: string,
+  storeOwnerEmail: string,
+  permissions: Record<PermissionKey, boolean>,
+  termsAccepted: boolean,
+) {
+  const html = `
+    <h2>Your Adbuffs Onboard setup is complete</h2>
+    ${table([
+      row("Store", shop),
+      row("Terms accepted", termsAccepted ? "Yes" : "No"),
+      row("Permissions granted", permissionsGranted(permissions)),
+    ].join(""))}
+  `;
+  await sendMail(storeOwnerEmail, `Your Adbuffs Onboard setup is complete for ${shop}`, html);
+}
+
 // Email #1 — sent to the App Owner right after the merchant authorizes the
 // checklist (submits the "Authorized, Continue" form).
 export async function sendOnboardPermissionEmail(
@@ -143,6 +171,28 @@ export async function sendFeedbackEmail(shop: string, fields: FeedbackAnswers) {
     ].join(""))}
   `;
   await sendMail(process.env.APP_OWNER_EMAIL ?? "", `Adbuffs Onboard: Feedback from ${shop}`, html);
+}
+
+export async function sendStoreOwnerFeedbackEmail(
+  shop: string,
+  storeOwnerEmail: string,
+  fields: FeedbackAnswers,
+) {
+  const fromName = fields.companyName.trim() || shop;
+  const html = `
+    <h2 style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:18px;color:#202223;">We received your feedback, ${escapeHtml(fromName)}</h2>
+    ${table([
+      row("Store", shop),
+      row("Company Name", fields.companyName),
+      row("Brand Name", fields.brandName),
+      rowHtml("Website URL", linkValue(fields.websiteUrl)),
+      row("How they heard about us", fields.discoverySource),
+      row("Associated with Adbuffs?", fields.associationStatus),
+      row("Experience rating", fields.experienceRating),
+      row("Feedback", fields.feedback),
+    ].join(""))}
+  `;
+  await sendMail(storeOwnerEmail, "We received your Adbuffs feedback", html);
 }
 
 const ROI_RESULT_HEADING = "ROI calculated Result with above values";
@@ -195,7 +245,7 @@ export async function sendSummaryEmail(
   roi: RoiAnswers | null,
 ) {
   const sections = [
-    `<h2>Your Adbuffs Onboard summary</h2>`,
+    `<h2>Your Adbuffs Onboard app was installed successfully</h2>`,
     table([
       row("Store", shop),
       row("Terms accepted", termsAccepted ? "Yes" : "No"),
@@ -227,5 +277,5 @@ export async function sendSummaryEmail(
     sections.push(table(roiMetricRows(roi)));
   }
 
-  await sendMail(storeOwnerEmail, "Your Adbuffs Onboard summary", sections.join(""));
+  await sendMail(storeOwnerEmail, "Your Adbuffs Onboard app was installed successfully", sections.join(""));
 }
