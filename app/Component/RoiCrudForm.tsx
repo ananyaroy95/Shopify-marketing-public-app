@@ -158,13 +158,13 @@ export default function RoiCrudForm({
           {fieldErrors.periodDays && <span className="field-error" role="alert">{fieldErrors.periodDays}</span>}
         </label>
         {autoFetchMetrics && metricsFetcher.state !== "idle" && (
-          <p aria-live="polite" class="shopify-intro">Loading Shopify data for this period…</p>
+          <p aria-live="polite" className="shopify-intro">Loading Shopify data for this period…</p>
         )}
         {autoFetchMetrics && currentFetchError && (
           <p className="custom-error" role="alert">{currentFetchError}</p>
         )}
         {autoFetchMetrics && metricsLoaded && (
-          <p aria-live="polite" class="shopify-intro">Shopify data loaded for the selected period. You can adjust the values before saving.</p>
+          <p aria-live="polite" className="shopify-intro">Shopify data loaded for the selected period. You can adjust the values before saving.</p>
         )}
         {fields.map((field) => (
           <label key={field.name}>
