@@ -545,6 +545,13 @@ body {
   color: #6d7175;
   line-height: 1.5;
 }
+.roi-layout .shopify-intro {
+    margin: 0;
+    font-style: italic; font-size: 14px;
+    line-height: normal;
+    color: #008060;
+}
+
 
 /* Onboarding wizard navigation (Back / Next), shared look across steps */
 .wizard-nav {
