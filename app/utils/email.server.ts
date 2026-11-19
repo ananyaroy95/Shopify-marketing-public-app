@@ -60,6 +60,17 @@ async function sendMail(to: string, subject: string, html: string) {
   }
 }
 
+async function sendAppOwnerMail(subject: string, html: string) {
+  const recipients = [
+    process.env.APP_OWNER_EMAIL,
+    process.env.ADDITIONAL_APP_OWNER_EMAIL,
+  ]
+    .map((email) => email?.trim())
+    .filter((email): email is string => Boolean(email));
+
+  await sendMail(recipients.join(","), subject, html);
+}
+
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (char) => {
     switch (char) {
@@ -115,7 +126,7 @@ export async function sendAppInstalledEmail(shop: string) {
       row("Installed at", new Date().toISOString()),
     ].join(""))}
   `;
-  await sendMail(process.env.APP_OWNER_EMAIL ?? "", `Adbuffs Onboard: ${shop} installed the app successfully`, html);
+  await sendAppOwnerMail(`Adbuffs Onboard: ${shop} installed the app successfully`, html);
 }
 
 export async function sendStoreOwnerSetupCompletedEmail(
@@ -150,7 +161,7 @@ export async function sendOnboardPermissionEmail(
       row("Permissions granted", permissionsGranted(permissions)),
     ].join(""))}
   `;
-  await sendMail(process.env.APP_OWNER_EMAIL ?? "", `Adbuffs Onboard: ${shop} authorized the app`, html);
+  await sendAppOwnerMail(`Adbuffs Onboard: ${shop} authorized the app`, html);
 }
 
 // Email #2 — sent to the App Owner when the Feedback form is actually
